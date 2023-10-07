@@ -1,7 +1,7 @@
 app-id: io.github.bpozdena.OneDriveGUI
-runtime: org.kde.Platform
-runtime-version: '6.5'
-sdk: org.kde.Sdk
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
 #  Sdk extensions to build onedrive client
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.llvm14
@@ -12,6 +12,7 @@ finish-args:
   - --share=network
   - --socket=wayland
   - --socket=fallback-x11
+  - --env=LD_LIBRARY_PATH=/app/lib
 cleanup:
   - /include
   - '*.a'
@@ -37,6 +38,45 @@ modules:
       - /bin
       - /share/et
       - /share/examples
+
+  # Build the double-conversion lib from source
+  - name: double-conversion
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DBUILD_SHARED_LIBS=ON
+    sources:
+      - type: git
+        url: https://github.com/google/double-conversion.git
+        tag: 'v3.3.0'      
+
+  # Build libevent from source
+  - name: libevent
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/libevent/libevent.git
+        tag: release-2.1.12-stable
+
+  # libwebp
+  - name: libwebp
+    buildsystem: autotools
+    sources:
+    - type: git
+      url: https://chromium.googlesource.com/webm/libwebp.git
+      tag: v0.5.2
+
+  # minizip
+  - name: libminizip
+    buildsystem: cmake-ninja
+    config-opts: 
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DCMAKE_INSTALL_LIBDIR=/app/lib
+    sources:
+      - type: git
+        url: https://github.com/nmoinvaz/minizip.git
+        tag: '4.0.1'
 
   # Build onedrive client from sources
   - name: onedrive-build
